@@ -201,5 +201,5 @@ def drop_clone_candidates(
         rows.append(dict(col1=a, col2=b, spearman=float(rho), score1=sa, score2=sb, drop_candidate=drop))
     out = pd.DataFrame(rows).sort_values(["spearman"], ascending=False)
     out.to_csv(f"{ART_DIR}/drop_candidates.csv", index=False)
-    print(f"[INFO] Drop candidates -> {ART_DIR}/drop_candidates.csv}")
+    print(f"[INFO] Drop candidates -> {ART_DIR}/drop_candidates.csv")
     return out
