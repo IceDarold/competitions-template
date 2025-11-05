@@ -117,6 +117,18 @@ def _impute_train_test(
         tr_imp = _fallback_impute(tr)
         te_imp = _fallback_impute(te)
 
+    # Выровняем индикаторные признаки: если колонка-индикатор есть только в одной части,
+    # подставим нули в другую.
+    indicator_cols = [
+        c for c in set(tr_imp.columns).union(te_imp.columns)
+        if c.endswith("__isna")
+    ]
+    for col in indicator_cols:
+        if col not in tr_imp.columns:
+            tr_imp[col] = np.zeros(len(tr_imp), dtype="int8")
+        if col not in te_imp.columns:
+            te_imp[col] = np.zeros(len(te_imp), dtype="int8")
+
     # Приведём boolean к числам — логрег устойчивее
     for df_ in (tr_imp, te_imp):
         for c in df_.columns:
