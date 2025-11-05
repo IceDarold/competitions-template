@@ -23,8 +23,8 @@ os.makedirs(ART_DIR, exist_ok=True)
 try:
     from missing import suggest_imputation_plan, apply_imputation
     HAVE_C_MODULE = True
-except Exception:
-    print("[WARN] missing C module not found, using fallback imputation")
+except Exception as e:
+    print("[WARN] missing C module not found, using fallback imputation. Error:", e)
     HAVE_C_MODULE = False
     from sklearn.impute import SimpleImputer
     def _fallback_impute(df: pd.DataFrame) -> pd.DataFrame:
