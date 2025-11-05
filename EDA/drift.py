@@ -21,7 +21,7 @@ os.makedirs(ART_DIR, exist_ok=True)
 
 # === Импорт плановой импутации из модуля C, с fallback ===
 try:
-    from missing import suggest_imputation_plan, apply_imputation
+    from EDA.missing import suggest_imputation_plan, apply_imputation
     HAVE_C_MODULE = True
 except Exception as e:
     print("[WARN] missing C module not found, using fallback imputation. Error:", e)
