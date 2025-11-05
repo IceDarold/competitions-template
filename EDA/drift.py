@@ -38,9 +38,13 @@ except Exception as e:
             imputer_cat = SimpleImputer(strategy="most_frequent")
             out[cat_cols] = imputer_cat.fit_transform(out[cat_cols])
         # индикаторы пропуска (упрощённо, для fallback)
-        for c in df.columns:
-            if df[c].isna().any():
-                out[f"{c}__isna"] = df[c].isna().astype("int8")
+        indicators = {
+            f"{c}__isna": df[c].isna().astype("int8")
+            for c in df.columns
+            if df[c].isna().any()
+        }
+        if indicators:
+            out = pd.concat([out, pd.DataFrame(indicators, index=df.index)], axis=1)
         return out
 
 # === Вспомогательные ===
@@ -162,8 +166,23 @@ def adversarial_validation(
     )
     clf = LogisticRegression(max_iter=300, solver="saga")  # saga дружит со sparse
     pipe = Pipeline([("pre", pre), ("clf", clf)])
-
-    pipe.fit(Xtr, ytr)
+    try:
+        pipe.fit(Xtr, ytr)
+    except ValueError as exc:
+        if "Input X contains NaN" in str(exc):
+            details = {
+                "train_split": [c for c in Xtr.columns if Xtr[c].isna().any()],
+                "valid_split": [c for c in Xva.columns if Xva[c].isna().any()],
+                "full_dataset": [c for c in X.columns if X[c].isna().any()],
+            }
+            culprit_info = "\n".join(
+                f"{label}: {cols}" for label, cols in details.items() if cols
+            ) or "Columns not detected"
+            raise ValueError(
+                "adversarial_validation: leftover NaNs detected after preprocessing.\n"
+                f"{culprit_info}"
+            ) from exc
+        raise
     p = pipe.predict_proba(Xva)[:, 1]
     auc = float(roc_auc_score(yva, p))
 
